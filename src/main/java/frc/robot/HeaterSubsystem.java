@@ -9,12 +9,15 @@ import java.util.List;
 
 import org.usfirst.frc3620.Utilities.SlidingWindowStats;
 
+import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.ctre.phoenix.motorcontrol.StickyFaults;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.counter.Tachometer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -30,10 +33,34 @@ public class HeaterSubsystem extends SubsystemBase {
 
   public HeaterSubsystem() {
     powerDistribution = RobotContainer.powerDistribution;
-    heaters.add(new WPI_TalonSRX(1));
-    heaters.add(new WPI_TalonSRX(2));
-    heaters.add(new WPI_TalonSRX(3));
-    heaters.add(new WPI_TalonSRX(4));
+    makeMotor(1);
+    makeMotor(2);
+    makeMotor(3);
+    makeMotor(4);
+  }
+
+  void makeMotor(int deviceId) {
+    WPI_TalonSRX talon = new WPI_TalonSRX(deviceId);
+    heaters.add(talon);
+    // https://v5.docs.ctr-electronics.com/en/latest/ch18_CommonAPI.html
+    int fast=10;
+    int slow=1000;
+    talon.setStatusFramePeriod(StatusFrame.Status_1_General, fast);
+    talon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, fast);
+    talon.setStatusFramePeriod(StatusFrame.Status_4_AinTempVbat, fast);
+
+    StickyFaults sf;
+    talon.getStickyFaults(sf);
+    /*
+    talon.setStatusFramePeriod(StatusFrame.Status_6_Misc, slow);
+    talon.setStatusFramePeriod(StatusFrame.Status_7_CommStatus, slow);
+    talon.setStatusFramePeriod(StatusFrame.Status_9_MotProfBuffer, slow);
+    talon.setStatusFramePeriod(StatusFrame.Status_10_Targets, slow);
+    talon.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, slow);
+    talon.setStatusFramePeriod(StatusFrame.Status_13_Base_PIDF0, slow);
+    talon.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, slow);
+    talon.setStatusFramePeriod(StatusFrame.Status_15_FirmwareApiStatus, slow);
+    */
   }
 
   void setHeaters(double value) {
@@ -84,12 +111,9 @@ public class HeaterSubsystem extends SubsystemBase {
     }
 
     if (powerDistribution != null) {
-      double v = powerDistribution.getVoltage();
-      double a = powerDistribution.getTotalCurrent();
-      DogLog.log("pdb/v", v);
-      DogLog.log("pdb/a", a);
-      DogLog.log("pdb/w", v*a);
-      DogLog.log("pdb/w_pdb", powerDistribution.getTotalPower());
+      DogLog.log("pdb/v", powerDistribution.getVoltage());
+      DogLog.log("pdb/a",  powerDistribution.getTotalCurrent());
+      DogLog.log("pdb/w", powerDistribution.getTotalPower()); // this seems to match our calc of getVoltage(getTotalCurrent)
       DogLog.log("pdb/j", powerDistribution.getTotalEnergy());
       DogLog.log("pdb/hb", hb);
     }
