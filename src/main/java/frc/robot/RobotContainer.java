@@ -44,7 +44,7 @@ public class RobotContainer {
   Alert missingDevicesAlert = new Alert("Diagnostics", "", Alert.AlertType.kWarning);
 
   // hardware here...
-  PowerDistribution powerDistribution;
+  public static PowerDistribution powerDistribution;
 
   // subsystems here
   HeaterSubsystem heaterSubsystem;
@@ -70,7 +70,7 @@ public class RobotContainer {
 
     if (canDeviceFinder.isDevicePresent(CANDeviceType.CTRE_PDP, 0)) {
       powerDistribution = new PowerDistribution(0, ModuleType.kCTRE);
-      DogLog.setPdh(powerDistribution);
+      // DogLog.setPdh(powerDistribution);
     }
 
     makeSubsystems();
@@ -105,15 +105,13 @@ public class RobotContainer {
 
   private void setupSmartDashboardCommands() {
     // SmartDashboard.putData(new xxxxCommand());
-    SmartDashboard.putData("run motor",
-        heaterSubsystem.makeSetSpeedCommand(0.5).withName("Run Motors").withTimeout(12));
-    heaterSubsystem.setDefaultCommand(heaterSubsystem.makeSetSpeedCommand(0).withName("Stopped Motors"));
+    heaterSubsystem.setDefaultCommand(heaterSubsystem.makeSetSpeedCommand(0).withName("Heaters off"));
 
-    Command command1 = heaterSubsystem.makeSetSpeedCommand(0.5).withTimeout(12);
+    Command command1 = heaterSubsystem.makeSetSpeedCommand(0.75).withTimeout(12);
     Command command2 = heaterSubsystem.makeSetSpeedCommand(0.0).withTimeout(3);
-
-    Command command3 = command1.andThen(command2).repeatedly().until(()->RobotController.getBatteryVoltage()<11.5);
-    SmartDashboard.putData("command3", command3);
+    Command command3 = command1.andThen(command2).repeatedly().until(() -> heaterSubsystem.getBatteryVoltage() < 10.85)
+        .withName("Run Test");
+    SmartDashboard.putData(command3);
   }
 
   SendableChooser<Command> chooser = new SendableChooser<>();
