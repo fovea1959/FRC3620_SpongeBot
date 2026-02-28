@@ -21,6 +21,8 @@ import org.usfirst.frc3620.RobotModeChangeListener;
 import org.usfirst.frc3620.RobotParametersContainer;
 import org.usfirst.frc3620.Utilities;
 
+import java.util.Random;
+
 import org.tinylog.TaggedLogger;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -103,11 +105,16 @@ public class RobotContainer {
   private void configureButtonBindings() {
   }
 
+  Random random = new Random();
+  double wobbly() {
+    return 0.1 + (random.nextDouble(0.2));
+  }
+
   private void setupSmartDashboardCommands() {
     // SmartDashboard.putData(new xxxxCommand());
     heaterSubsystem.setDefaultCommand(heaterSubsystem.makeSetSpeedCommand(0).withName("Heaters off"));
 
-    Command command1 = heaterSubsystem.makeSetSpeedCommand(0.75).withTimeout(12);
+    Command command1 = heaterSubsystem.makeSetSpeedCommand(() -> wobbly()).withTimeout(12);
     Command command2 = heaterSubsystem.makeSetSpeedCommand(0.0).withTimeout(3);
     Command command3 = command1.andThen(command2).repeatedly().until(() -> heaterSubsystem.getBatteryVoltage() < 10.85)
         .withName("Run Test");
