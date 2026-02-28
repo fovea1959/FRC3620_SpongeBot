@@ -45,7 +45,7 @@ public class RobotContainer {
   Alert missingDevicesAlert = new Alert("Diagnostics", "", Alert.AlertType.kWarning);
 
   // hardware here...
-  PowerDistribution powerDistribution;
+  public static PowerDistribution powerDistribution;
 
   // subsystems here
   HeaterSubsystem heaterSubsystem;
@@ -71,7 +71,7 @@ public class RobotContainer {
 
     if (canDeviceFinder.isDevicePresent(CANDeviceType.CTRE_PDP, 0)) {
       powerDistribution = new PowerDistribution(0, ModuleType.kCTRE);
-      DogLog.setPdh(powerDistribution);
+      // DogLog.setPdh(powerDistribution);
     }
 
     makeSubsystems();
@@ -106,8 +106,7 @@ public class RobotContainer {
 
   private void setupSmartDashboardCommands() {
     // SmartDashboard.putData(new xxxxCommand());
-    SmartDashboard.putData("run motor",
-        heaterSubsystem.makeSetSpeedCommand(0.5).withName("Run Motors").withTimeout(12));
+    // SmartDashboard.putData("run motor", heaterSubsystem.makeSetSpeedCommand(0.5).withName("Run Motors").withTimeout(12));
     heaterSubsystem.setDefaultCommand(heaterSubsystem.makeSetSpeedCommand(0).withName("Stopped Motors"));
 
     Command startHeating = heaterSubsystem.makeSetSpeedCommand(0.75).withTimeout(12);
@@ -117,8 +116,9 @@ public class RobotContainer {
         "Test Battery Command has ended.");
 
     Command testBattery = startHeating.andThen(timeout).repeatedly()
-        .until(() -> RobotController.getBatteryVoltage() < 10)
-        .finallyDo(() -> Elastic.sendNotification(notification.withDisplaySeconds(10.0)));
+        .until(() -> heaterSubsystem.getBatteryVoltage() < 10)
+        .finallyDo(() -> Elastic.sendNotification(notification.withDisplaySeconds(10.0)))
+        .withName("Test Battery");
 
     SmartDashboard.putData("Test Battery", testBattery);
 
