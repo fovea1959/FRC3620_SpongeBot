@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.util.function.BooleanConsumer;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -24,6 +25,7 @@ import org.usfirst.frc3620.Utilities;
 import org.tinylog.TaggedLogger;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.util.Elastic;
 
@@ -49,6 +51,9 @@ public class RobotContainer {
 
   // subsystems here
   HeaterSubsystem heaterSubsystem;
+  BatteryIdentifierSubsystem batteryIdentifierSubsystem;
+  SimulatedBatterySubsystem simulatedBatterySubsystem;
+
   // joysticks here....
 
   /**
@@ -69,7 +74,7 @@ public class RobotContainer {
       logger.warn("this is a test chassis, will try to deal with missing hardware!");
     }
 
-    if (canDeviceFinder.isDevicePresent(CANDeviceType.CTRE_PDP, 0)) {
+    if (canDeviceFinder.isDevicePresent(CANDeviceType.CTRE_PDP, 0) || Robot.isSimulation()) {
       powerDistribution = new PowerDistribution(0, ModuleType.kCTRE);
       // DogLog.setPdh(powerDistribution);
     }
@@ -91,6 +96,10 @@ public class RobotContainer {
 
   private void makeSubsystems() {
     heaterSubsystem = new HeaterSubsystem();
+    batteryIdentifierSubsystem = new BatteryIdentifierSubsystem();
+    if (Robot.isSimulation()) {
+      simulatedBatterySubsystem = new SimulatedBatterySubsystem(powerDistribution, heaterSubsystem::getHeaterPower);
+    }
   }
 
   /**
@@ -104,24 +113,46 @@ public class RobotContainer {
   private void configureButtonBindings() {
   }
 
+  Elastic.Notification testIsCompleteNotification = new Elastic.Notification(Elastic.NotificationLevel.INFO, "Info",
+      "Test Battery Command is complete.").withDisplaySeconds(10.0);
+  Elastic.Notification testWasInterruptedNotification = new Elastic.Notification(Elastic.NotificationLevel.INFO, "Info",
+      "Test Battery Command was interrupted.").withDisplaySeconds(10.0);
+  Elastic.Notification noBatteryIdNotification = new Elastic.Notification(Elastic.NotificationLevel.ERROR, "Info",
+      "Can't start test: need to know what battery we have!").withDisplaySeconds(10.0);
+
   private void setupSmartDashboardCommands() {
     // SmartDashboard.putData(new xxxxCommand());
-    // SmartDashboard.putData("run motor", heaterSubsystem.makeSetSpeedCommand(0.5).withName("Run Motors").withTimeout(12));
+    // SmartDashboard.putData("run motor",
+    // heaterSubsystem.makeSetSpeedCommand(0.5).withName("Run
+    // Motors").withTimeout(12));
     heaterSubsystem.setDefaultCommand(heaterSubsystem.makeSetSpeedCommand(0).withName("Stopped Motors"));
 
     Command startHeating = heaterSubsystem.makeSetSpeedCommand(0.75).withTimeout(12);
     Command timeout = heaterSubsystem.makeSetSpeedCommand(0.0).withTimeout(3);
 
-    Elastic.Notification notification = new Elastic.Notification(Elastic.NotificationLevel.INFO, "Info",
-        "Test Battery Command has ended.");
-
     Command testBattery = startHeating.andThen(timeout).repeatedly()
-        .until(() -> heaterSubsystem.getBatteryVoltage() < 10)
-        .finallyDo(() -> Elastic.sendNotification(notification.withDisplaySeconds(10.0)))
+        .until(() -> heaterSubsystem.getBatteryVoltage() < 10);
+
+    BooleanConsumer notifyThatWeAreDone = interrupted -> {
+      if (interrupted) {
+        Elastic.sendNotification(testWasInterruptedNotification);
+      } else {
+        Elastic.sendNotification(testIsCompleteNotification);
+      }
+    };
+
+    Command testAndNotify = testBattery.finallyDo(notifyThatWeAreDone);
+
+    Command notifyAboutBatteryId = Commands.runOnce(() -> Elastic.sendNotification(noBatteryIdNotification));
+
+    Command testOrNotifyAboutBatteryId = Commands
+        .either(testAndNotify, notifyAboutBatteryId, () -> batteryIdentifierSubsystem.getBatteryId().isPresent())
         .withName("Test Battery");
 
-    SmartDashboard.putData("Test Battery", testBattery);
+    SmartDashboard.putData(testOrNotifyAboutBatteryId);
 
+    SmartDashboard.putData(Commands.runOnce(() -> batteryIdentifierSubsystem.setBatteryId(99)).ignoringDisable(true)
+        .withName("Set battery id"));
   }
 
   SendableChooser<Command> chooser = new SendableChooser<>();

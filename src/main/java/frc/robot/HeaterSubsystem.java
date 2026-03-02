@@ -24,6 +24,8 @@ public class HeaterSubsystem extends SubsystemBase {
   PowerDistribution powerDistribution;
   int hb = 0;
 
+  double heaterPower = 0;
+
   public HeaterSubsystem() {
     powerDistribution = RobotContainer.powerDistribution;
     makeMotor(1);
@@ -60,6 +62,7 @@ public class HeaterSubsystem extends SubsystemBase {
     for (var heater : heaters) {
       heater.set(TalonSRXControlMode.PercentOutput, value);
     }
+    heaterPower = value;
   }
 
   public Command makeSetSpeedCommand(DoubleSupplier supplier) {
@@ -68,6 +71,10 @@ public class HeaterSubsystem extends SubsystemBase {
 
   public Command makeSetSpeedCommand(double value) {
     return run(() -> setHeaters(value));
+  }
+
+  public double getHeaterPower() {
+    return heaterPower;
   }
 
   @Override
