@@ -9,8 +9,8 @@
         "containers": [
           {
             "title": "batteryId",
-            "x": 128.0,
-            "y": 256.0,
+            "x": 0.0,
+            "y": 128.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
@@ -98,7 +98,7 @@
           {
             "title": "mode",
             "x": 0.0,
-            "y": 128.0,
+            "y": 256.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
@@ -107,20 +107,6 @@
               "period": 0.06,
               "data_type": "string",
               "show_submit_button": false
-            }
-          },
-          {
-            "title": "batteryIdSetter",
-            "x": 0.0,
-            "y": 256.0,
-            "width": 128.0,
-            "height": 128.0,
-            "type": "Text Display",
-            "properties": {
-              "topic": "batteryIdSetter",
-              "period": 0.06,
-              "data_type": "int",
-              "show_submit_button": true
             }
           }
         ]
@@ -159,7 +145,7 @@
           },
           {
             "title": "all",
-            "x": 768.0,
+            "x": 1024.0,
             "y": 0.0,
             "width": 256.0,
             "height": 128.0,
@@ -173,7 +159,7 @@
           },
           {
             "title": "valid",
-            "x": 768.0,
+            "x": 1024.0,
             "y": 128.0,
             "width": 256.0,
             "height": 128.0,
@@ -187,7 +173,7 @@
           },
           {
             "title": "batteryId",
-            "x": 768.0,
+            "x": 1024.0,
             "y": 256.0,
             "width": 256.0,
             "height": 128.0,
@@ -197,6 +183,34 @@
               "period": 0.06,
               "data_type": "int",
               "show_submit_button": false
+            }
+          },
+          {
+            "title": "Start Vision",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Command",
+            "properties": {
+              "topic": "/SmartDashboard/Start Vision",
+              "period": 0.06,
+              "show_type": true,
+              "maximize_button_space": false
+            }
+          },
+          {
+            "title": "batteryIdSetter",
+            "x": 768.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "batteryIdSetter",
+              "period": 0.06,
+              "data_type": "int",
+              "show_submit_button": true
             }
           }
         ]
@@ -216,20 +230,6 @@
             "type": "Command",
             "properties": {
               "topic": "/SmartDashboard/Reset Simulated Battery",
-              "period": 0.06,
-              "show_type": true,
-              "maximize_button_space": false
-            }
-          },
-          {
-            "title": "Set battery id",
-            "x": 768.0,
-            "y": 0.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Command",
-            "properties": {
-              "topic": "/SmartDashboard/Set battery id",
               "period": 0.06,
               "show_type": true,
               "maximize_button_space": false

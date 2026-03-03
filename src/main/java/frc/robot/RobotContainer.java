@@ -150,6 +150,8 @@ public class RobotContainer {
         .withName("Test Battery");
 
     SmartDashboard.putData(testOrNotifyAboutBatteryId);
+
+    SmartDashboard.putData(Commands.runOnce(() -> batteryIdentifierSubsystem.startVisionThread()).withName("Start Vision").ignoringDisable(true));
   }
 
   SendableChooser<Command> chooser = new SendableChooser<>();

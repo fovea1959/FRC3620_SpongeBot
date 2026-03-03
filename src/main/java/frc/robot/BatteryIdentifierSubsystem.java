@@ -35,14 +35,10 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
 
   IntegerEntry batteryIdEntry;
 
+  Thread visionThread;
+
   /** Creates a new BatteryIdentifierSubsystem. */
   public BatteryIdentifierSubsystem() {
-    /*
-    var visionThread = new Thread(this::apriltagVisionThreadProc);
-    visionThread.setDaemon(true);
-    visionThread.start();
-    */
-
     IntegerTopic batteryIdTopic = NetworkTableInstance.getDefault().getIntegerTopic("batteryIdSetter");
     batteryIdEntry = batteryIdTopic.getEntry(-1);
     batteryIdEntry.set(-1);
@@ -60,6 +56,14 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
     setBatteryId(-1);
   }
 
+  public void startVisionThread() {
+    if (visionThread == null) {
+      visionThread = new Thread(this::apriltagVisionThreadProc);
+      visionThread.setDaemon(true);
+      visionThread.start();
+    }
+  }
+
   public Optional<Integer> getBatteryId() {
     return batteryId;
   }
@@ -72,6 +76,7 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
         batteryId = Optional.of(id);
       }
     }
+    DogLog.log("batteryId", id);
   }
 
   void apriltagVisionThreadProc() {
@@ -163,7 +168,8 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
       if (validTags.size() > 1) {
         setBatteryId(-1);
       } else if (validTags.size() == 1) {
-        setBatteryId(validTags.get(0));
+        var id = validTags.get(0);
+        setBatteryId(id);
       } else {
         // we don't see any valid tags. just keep what we had
       }
@@ -173,6 +179,8 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
     }
 
     detector.close();
+
+    visionThread = null;
   }
 
 }
