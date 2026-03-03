@@ -5,12 +5,15 @@
 package frc.robot;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Optional;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.tinylog.TaggedLogger;
+import org.usfirst.frc3620.logger.LoggingMaster;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.apriltag.AprilTagDetection;
@@ -19,11 +22,18 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.CvSink;
 import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.networktables.IntegerEntry;
+import edu.wpi.first.networktables.IntegerTopic;
+import edu.wpi.first.networktables.NetworkTableEvent;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class BatteryIdentifierSubsystem extends SubsystemBase {
+  TaggedLogger logger = LoggingMaster.getLogger(getClass());
   Optional<Integer> empty = Optional.empty(); // only create this once
   Optional<Integer> batteryId = empty;
+
+  IntegerEntry batteryIdEntry;
 
   /** Creates a new BatteryIdentifierSubsystem. */
   public BatteryIdentifierSubsystem() {
@@ -33,6 +43,20 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
     visionThread.start();
     */
 
+    IntegerTopic batteryIdTopic = NetworkTableInstance.getDefault().getIntegerTopic("batteryIdSetter");
+    batteryIdEntry = batteryIdTopic.getEntry(-1);
+    batteryIdEntry.set(-1);
+
+    NetworkTableInstance.getDefault().addListener(
+        batteryIdEntry,
+        EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+        event -> {
+          int id = (int) event.valueData.value.getInteger();
+          DogLog.log("batteryId", id);
+          logger.info("Battery id change from network tables: {}", id);
+          setBatteryId(id);
+        });
+
     setBatteryId(-1);
   }
 
@@ -40,7 +64,7 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
     return batteryId;
   }
 
-  public void setBatteryId(int id) {
+  private void setBatteryId(int id) {
     if (id < 0) {
       batteryId = empty;
     } else {
@@ -48,7 +72,6 @@ public class BatteryIdentifierSubsystem extends SubsystemBase {
         batteryId = Optional.of(id);
       }
     }
-    DogLog.log("batteryId", id);
   }
 
   void apriltagVisionThreadProc() {

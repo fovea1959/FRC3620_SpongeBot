@@ -150,9 +150,6 @@ public class RobotContainer {
         .withName("Test Battery");
 
     SmartDashboard.putData(testOrNotifyAboutBatteryId);
-
-    SmartDashboard.putData(Commands.runOnce(() -> batteryIdentifierSubsystem.setBatteryId(99)).ignoringDisable(true)
-        .withName("Set battery id"));
   }
 
   SendableChooser<Command> chooser = new SendableChooser<>();
